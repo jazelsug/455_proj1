@@ -1,6 +1,6 @@
 % Name: proj1_case1.m
 % Author: Jazel A. Suguitan
-% Last Modified: Sept. 28, 2021
+% Last Modified: Sept. 29, 2021
 
 clc,clear
 close all
