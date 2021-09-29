@@ -84,19 +84,24 @@ function [A] = adjMatrix(nodes, Nei_agent)
 end
 
 %[Ui] = inputcontrol_Algorithm1(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
-function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon)
+function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes)
     c1_alpha = 30;
     c2_alpha = 2*sqrt(c1_alpha);
+    Ui = zeros(num_nodes, n);
+    gradient = 0.;
+    consensus = 0.;
     
     % need c1*gradient + c2*consensus
     
     for i = 1:num_nodes
-        for j = 1:num_nodes
-           if ismember(j, Nei_agent{i})
-            %gradient = phi_alpha of sigma norm * nij(nodes(i), nodes(j),
-            %epsilon)
-           end
+        for j = 1:size(Nei_agent{i},1)
+            % i refers to node i
+            % j refers to the jth neighbor of node i
+            phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j)) - nodes(i,:), epsilon);    %CHECK
+            gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j)), epsilon);
+            consensus = aij(nodes(i,:), Nei_agent{i}(j), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
+        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);
     end
 end
 
