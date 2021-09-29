@@ -31,18 +31,50 @@ p_nodes_all = cell(size(t,2),num_nodes);
 nFrames = 20; %set number of frames for the movie
 mov(1:nFrames) = struct('cdata', [],'colormap', []); % Preallocate movie structure.
 
-%TEST - DELETE LATER
-[Nei_agent, A] = findNeighbors(nodes, r);
-celldisp(Nei_agent)
-A(1:10)
-nodes(1,:), nodes(2,:)
-aij_test = aij(nodes(1,:), nodes(2,:), epsilon, r)
-nij_test = nij(nodes(1,:), nodes(2,:), epsilon)
+% %TEST - DELETE LATER
+% [Nei_agent, A] = findNeighbors(nodes, r);
+% celldisp(Nei_agent)
+% A(1:10)
+% nodes(1,:), nodes(2,:)
+% aij_test = aij(nodes(1,:), nodes(2,:), epsilon, r)
+% nij_test = nij(nodes(1,:), nodes(2,:), epsilon)
+% [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
+
 
 %[Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findNeighbors(nodes_old,nodes,r, r_prime,obstacles, Rk, n, p_nodes,delta_t_update)
 % r_prime, obstacles, Rk doesn't matter for case 1
 
-[Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
+for iteration =1:length(t)
+    [Nei_agent, A] = findNeighbors(nodes, r);
+    [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
+    p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
+    p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
+    nodes_old = nodes;
+    nodes = nodes_old + p_nodes*delta_t_update  + Ui*delta_t_update*delta_t_update /2;
+    q_mean(iteration,:) = mean(nodes); %Compute position of COM of MSN
+    plot(q_mean(:,1),q_mean(:,2),'ro','LineWidth',2,'MarkerEdgeColor','k', 'MarkerFaceColor','k','MarkerSize',4.2)
+    hold on      
+    %p_mean(iteration,:) = mean(p_nodes); %Compute velocity of COM of MSN
+    q_nodes_all{iteration} = nodes;
+    Connectivity(iteration)= (1/(num_nodes))*rank(A);
+    
+    % Plot
+    plot(nodes(:,1),nodes(:,2), '.')
+    hold on
+    plot(nodes(:,1),nodes(:,2), 'k>','LineWidth',.2,'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',5)
+    hold off
+    for node_i = 1:num_nodes
+        tmp=nodes(Nei_agent{node_i},:);
+        for j = 1:size(nodes(Nei_agent{node_i},1))
+            line([nodes(node_i,1),tmp(j,1)],[nodes(node_i,2),tmp(j,2)]) 
+        end
+    end
+mov(iteration) = getframe;
+hold off
+end  
+VideoWriter(mov, 'flocking.avi', 'Compression', 'None');
+
+% --- FUNCTIONS ---
 
 function [Nei_agent, A] = findNeighbors(nodes, range)
     num_nodes = size(nodes,1);
@@ -97,7 +129,7 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
         for j = 1:size(Nei_agent{i},1)
             % i refers to node i
             % j refers to the jth neighbor of node i
-            phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);    %CHECK
+            phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
             consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
