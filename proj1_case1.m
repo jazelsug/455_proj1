@@ -232,7 +232,7 @@ function result = aij(i, j, epsilon, r)
 %     result : 1x2 double
     
     r_alpha = sigmaNorm(r, epsilon);
-    input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha
+    input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
     result = zeros(size(i));    % result is a 1x2 matrix
     result = bump(input_to_bump);
 end
