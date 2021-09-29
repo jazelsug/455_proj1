@@ -42,7 +42,7 @@ nij_test = nij(nodes(1,:), nodes(2,:), epsilon)
 %[Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findNeighbors(nodes_old,nodes,r, r_prime,obstacles, Rk, n, p_nodes,delta_t_update)
 % r_prime, obstacles, Rk doesn't matter for case 1
 
-%[Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
+[Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
 
 function [Nei_agent, A] = findNeighbors(nodes, range)
     num_nodes = size(nodes,1);
@@ -84,10 +84,10 @@ function [A] = adjMatrix(nodes, Nei_agent)
 end
 
 %[Ui] = inputcontrol_Algorithm1(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
-function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes)
+function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions)
     c1_alpha = 30;
     c2_alpha = 2*sqrt(c1_alpha);
-    Ui = zeros(num_nodes, n);
+    Ui = zeros(num_nodes, dimensions);
     gradient = 0.;
     consensus = 0.;
     
@@ -97,9 +97,9 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
         for j = 1:size(Nei_agent{i},1)
             % i refers to node i
             % j refers to the jth neighbor of node i
-            phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j)) - nodes(i,:), epsilon);    %CHECK
-            gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j)), epsilon);
-            consensus = aij(nodes(i,:), Nei_agent{i}(j), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
+            phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);    %CHECK
+            gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
+            consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);
     end
