@@ -58,7 +58,7 @@ for iteration =1:length(t)
     q_nodes_all{iteration} = nodes;
     Connectivity(iteration)= (1/(num_nodes))*rank(A);
     
-    % Plot
+    %================= PLOT and LINK SENSOR TOGETHER ===============
     plot(nodes(:,1),nodes(:,2), '.')
     hold on
     plot(nodes(:,1),nodes(:,2), 'k>','LineWidth',.2,'MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',5)
@@ -72,7 +72,35 @@ for iteration =1:length(t)
 mov(iteration) = getframe;
 hold off
 end  
-VideoWriter(mov, 'flocking.avi', 'Compression', 'None');
+% used to movie2avi
+v = VideoWriter('flocking.avi');
+open(v)
+writeVideo(v, mov)
+close(v)
+
+%========================PLOT VELOCITY OF MSN===========================
+p_each_nodes = [];
+for i = 2:size(t,2)                    
+    tmp7 = p_nodes_all{i};
+    for j = 1:num_nodes
+     if j ==1 %Plot velociy of sensor node 1; you can change this number to plot for other nodes
+       p_each_nodes(i) =  norm(tmp7(j,:));
+    end
+    end
+end
+figure(3), plot(p_each_nodes, 'b')
+hold on
+figure(4),plot(Connectivity)
+grid on
+%========================PLOT TRAJECTORY OF SENSOR NODES===============
+for i = 2:length(q_nodes_all)                    
+    tmp8 = q_nodes_all{i};
+    figure(5), plot(tmp8(:,1), tmp8(:,2), 'k.')
+    hold on
+end
+hold on
+plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',5)
+
 
 % --- FUNCTIONS ---
 
