@@ -1,13 +1,13 @@
 % Name: proj1_case1.m
 % Author: Jazel A. Suguitan
-% Last Modified: Sept. 29, 2021
+% Last Modified: Sept. 30, 2021
 
 clc,clear
 close all
 
 % CASE 1: Algorithm 1 (MSN Fragmentation)
 
-% --- SET PARAMETERS ---
+%================= SET PARAMETERS ===============
 
 d = 15; % Set desired distance among sensor nodes
 k_scale = 1.2;  % Set the scale of MSN: 
@@ -21,6 +21,8 @@ nodes = 150.*rand(num_nodes,n)+150.*repmat([0 1],num_nodes,1);  % Randomly gener
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
 delta_t_update = 0.008;  % Set time step
 t = 0:delta_t_update:7; % Set simulation time
+
+%================= SET NODES AND CHECKS DURING ITERATIONS ===============
 
 nodes_old = nodes; %KEEP privious positions of MSN
 q_mean = zeros(size(t,2),n);%Save positions of COM (Center of Mass)
@@ -43,6 +45,8 @@ mov(1:nFrames) = struct('cdata', [],'colormap', []); % Preallocate movie structu
 
 %[Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findNeighbors(nodes_old,nodes,r, r_prime,obstacles, Rk, n, p_nodes,delta_t_update)
 % r_prime, obstacles, Rk doesn't matter for case 1
+
+%================= START ITERATION ===============
 
 for iteration =1:length(t)
     [Nei_agent, A] = findNeighbors(nodes, r);
@@ -78,7 +82,7 @@ open(v)
 writeVideo(v, mov)
 close(v)
 
-%========================PLOT VELOCITY OF MSN===========================
+%======================== PLOT VELOCITY OF MSN ===========================
 p_each_nodes = [];
 for i = 2:size(t,2)                    
     tmp7 = p_nodes_all{i};
@@ -92,7 +96,7 @@ figure(3), plot(p_each_nodes, 'b')
 hold on
 figure(4),plot(Connectivity)
 grid on
-%========================PLOT TRAJECTORY OF SENSOR NODES===============
+%======================= PLOT TRAJECTORY OF SENSOR NODES ===============
 for i = 2:length(q_nodes_all)                    
     tmp8 = q_nodes_all{i};
     figure(5), plot(tmp8(:,1), tmp8(:,2), 'k.')
@@ -102,57 +106,43 @@ hold on
 plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',5)
 
 
-% --- FUNCTIONS ---
+%================= FUNCTIONS ===============
 
-function [Nei_agent, A] = findNeighbors(nodes, range)
-    num_nodes = size(nodes,1);
-    Nei_agent = cell(num_nodes,1);
-    
-    for i = 1:num_nodes
-        for j = 1:num_nodes
-           q1 = [nodes(i,1) nodes(i,2)];
-           q2 = [nodes(j,1) nodes(j,2)];
-           dist = norm(q1-q2);
-           if i~= j && dist <= range
-              Nei_agent{i} = [Nei_agent{i} j];  %Add j to list of i's neighbors
-           end
-        end
-    end
-    
-    A = adjMatrix(nodes, Nei_agent);
-end
-
-function [A] = adjMatrix(nodes, Nei_agent)
-%     Returns a matrix with values 0 & 1 corresponding with the adjacency of the nodes from the nodes input.
-% 
-%     Inputs:
-%     nodes : double matrix
-%     Nei_agent : cell array
-%     
-%     Output:
-%     [A] : adjacency matrix for nodes input
-    num_nodes = size(nodes, 1);
-    A = zeros(num_nodes);
-
-    for i = 1:num_nodes
-       for j = 1:num_nodes
-           if ismember(j, Nei_agent{i})
-                A(i,j) = 1;
-           end
-       end
-    end
-end
-
-%[Ui] = inputcontrol_Algorithm1(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
 function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions)
+%     Function for generating the Ui controller of the MSN.
+%     
+%     Parameters
+%     -------------
+%     nodes : double matrix (100x2)
+%         Matrix of node positions in x-y coordinates
+%     Nei_agent : cell array (100x1)
+%         A container holding the neighbor indices for each node
+%     num_nodes : double
+%         The number of nodes in the MSN
+%     epsilon : double
+%         A constant for sigma norm
+%     r : double
+%         The interaction range of the nodes in the MSN
+%     d : double
+%         The desired distance among nodes in the MSN
+%     p_nodes : double matrix (100x2)
+%         The velocities of nodes, given in x and y directions
+%     dimensions : double
+%         The number of dimensions in which the MSN is operating
+%         
+%     Returns
+%     -------------
+%     [Ui] : double matrix (100x2)
+%         Controls the positions of the nodes in the MSN as time progresses
+    
+    % Set constants
     c1_alpha = 30;
     c2_alpha = 2*sqrt(c1_alpha);
-    Ui = zeros(num_nodes, dimensions);
-    gradient = 0.;
-    consensus = 0.;
+    Ui = zeros(num_nodes, dimensions);  % initialize Ui matrix to all 0's
+    gradient = 0.;  % Initialize gradient part of Ui equation
+    consensus = 0.; % Initialize consensus part of Ui equation
     
-    % need c1*gradient + c2*consensus
-    
+    % Sum gradient and consensus values for each node i
     for i = 1:num_nodes
         for j = 1:size(Nei_agent{i},1)
             % i refers to node i
@@ -161,32 +151,110 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
             gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
             consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
-        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);
+        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);   % Set Ui for node i using gradient and consensus
+    end
+end
+
+function [Nei_agent, A] = findNeighbors(nodes, range)
+%     Function for determining the neighbors of each node in a collection of nodes.
+%     
+%     Parameters
+%     ------------
+%     nodes : double matrix (100x2)
+%         Matrix of node positions in x-y coordinates
+%     range : double
+%         The interaction range of the nodes in the MSN
+%         
+%     Returns
+%     ------------
+%     Nei_agent : cell array (100x1)
+%         A container holding the neighbor indices for each node
+%     A : double matrix (100x100)
+%         The adjacency matrix of nodes
+
+    num_nodes = size(nodes,1);
+    Nei_agent = cell(num_nodes,1);  % Initialize cell array to hold indices of neighbors
+    
+    % Iterate through each node i
+    for i = 1:num_nodes
+        for j = 1:num_nodes
+           % Check each node j if it's a neighbor of node i
+           q1 = [nodes(i,1) nodes(i,2)];    % Set q1 with node i values
+           q2 = [nodes(j,1) nodes(j,2)];    % Set q2 with node j values
+           dist = norm(q1-q2);  % Euclidean norm of q1 and q2
+           if i~= j && dist <= range
+              Nei_agent{i} = [Nei_agent{i} j];  %Add j to list of i's neighbors
+           end
+        end
+    end
+    
+    A = adjMatrix(nodes, Nei_agent); % Use adjMatrix function to obtain adjacency matrix
+end
+
+function [A] = adjMatrix(nodes, Nei_agent)
+%     Function for obtaining the adjacency matrix for a set of nodes. Used
+%     for calculating Connectivity in the MSN.
+% 
+%     Parameters
+%     -------------
+%     nodes : double matrix (100x2)
+%           Matrix of node positions in x-y coordinates
+%     Nei_agent : cell array
+%           A container holding the neighbor indices for each node
+%     
+%     Returns
+%     -------------
+%     [A] : double matrix (100x100)
+%           The adjacency matrix of nodes
+
+    num_nodes = size(nodes, 1);
+    A = zeros(num_nodes);   % Initialize matrix with 0s
+
+    for i = 1:num_nodes
+       for j = 1:num_nodes
+           if ismember(j, Nei_agent{i})
+               % Node i and node j are neighbors
+                A(i,j) = 1; % Set value in matrix to 1
+           end
+       end
     end
 end
 
 function result = sigmaNorm(z, epsilon)
 %     Returns the sigma norm of a given value/vector z and an epsilon contant value.
 %     
-%     Inputs:
+%     Parameters
+%     -------------
 %     z : double
-%     epsilon : double, constant
+%           Vector of which to take the sigma norm
+%     epsilon : double
+%           A constant used to calculate the sigma norm
 %     
-%     Output:
+%     Returns
+%     -----------
 %     result : double
+%           The sigma norm value of vector z
+
     result = (1/epsilon) * (sqrt(1 + epsilon*(norm(z))^2)-1);
 end
 
 function result = nij(i, j, epsilon)
-%     Used for the gradient term in Algorithm 1 Ui.
+%     Function for obstaining the vector along the line connecting two nodes.
+%     Used in calculating the gradient-based term in Algorithm 1 Ui.
 %     
-%     Inputs:
-%     i : 1x2 double, position of node i
-%     j : 1x2 double, position of node j
-%     epsilon : double, constant
+%     Parameters
+%     -------------
+%     i : double array (1x2)
+%           Position of node i
+%     j : double array (1x2)
+%           Position of node j
+%     epsilon : double
+%           A constant
 %     
-%     Output:
-%     result : 1x2 double
+%     Returns
+%     -----------
+%     result : double array (1x2)
+%           The vector along the line connecting node i and node j
     
     numerator = j - i;
     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
@@ -196,46 +264,61 @@ end
 function result = bump(z)
 %     A scalar function varying between 0 and 1. Used for construction of smooth potential functions with finite cut-offs and smooth adj. matrices.
 %     
-%     Inputs:
+%     Parameters
+%     -------------
 %     z : double
+%           The input to be smoothened
 %     
-%     Output:
+%     Returns
+%     -----------
 %     result : double
+%           The 0 or 1 value
     
     h = 0.2;    % Set constant h
     
     if z >= 0 && z < h
         result = 1;
     elseif z >= h && z <= 1
-        result = 0.5 * (1 + cos(pi*(z-h)/(1-h)));  % CHECK - cosine in degrees or radians?
+        result = 0.5 * (1 + cos(pi*(z-h)/(1-h)));
     else
         result = 0;
     end
 end
 
 function result = phi_alpha(z, r, d, epsilon)
-%     Used in gradient term of Alg. 1 Ui.
+%     The action function used to construct a smooth pairwise potential
+%     with finite cut-off in the gradient-based term of the Alg.1 Ui.
 %     
-%     Inputs:
+%     Parameters
+%     -------------
 %     z : double
-%     r : double, interaction range of nodes in MSN
-%     d : double, desired distance of nodes in MSN
-%     espilon : double, constant
+%           Sigma norm value of two nodes
+%     r : double
+%           Interaction range of nodes in MSN
+%     d : double
+%           Desired distance of nodes in MSN
+%     espilon : double
+%           A constant for the sigma norm
 %     
-%     Output:
+%     Returns
+%     -----------
 %     result : double
+%           Value to be used in Ui gradient-based term
+
     r_alpha = sigmaNorm(r, epsilon);
     d_alpha = sigmaNorm(d, epsilon);    %CHECK - is this what d alpha is?
     result = bump(z/r_alpha) * phi(z-d_alpha);
 end
 
 function result = phi(z)
-%     Used for phi_alpha function.
+%     An uneven sigmoidal function, used in the phi_alpha function.
 %     
-%     Input:
+%     Parameters
+%     -------------
 %     z : double
 %     
-%     Output:
+%     Returns
+%     -----------
 %     result : double
 
     %Set constants
@@ -250,14 +333,21 @@ end
 function result = aij(i, j, epsilon, r)
 %     Returns the spatial adjacency matrix given the positions of two nodes, i and j.
 %     
-%     Inputs:
-%     i : 1x2 double, position of node i
-%     j : 1x2 double, position of node j
-%     epsilon : constant for sigma norm
-%     r : double, interaction range for nodes in MSN
+%     Parameters
+%     -------------
+%     i : double array (1x2)
+%           Position of node i
+%     j : double array (1x2)
+%           Position of node j
+%     epsilon : double
+%           Constant for sigma norm
+%     r : double
+%           Interaction range for nodes in MSN
 %     
-%     Output:
-%     result : 1x2 double
+%     Returns
+%     -----------
+%     result : double array (1x2)
+%           The spatial adjacency matrix
     
     r_alpha = sigmaNorm(r, epsilon);
     input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
