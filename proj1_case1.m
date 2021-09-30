@@ -17,9 +17,9 @@ epsilon = 0.1;  % Set a constant for sigma norm
 num_nodes = 100;    % Set number of sensor nodes
 n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
-nodes = 150.*rand(num_nodes,n)+150.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
+nodes = 50.*rand(num_nodes,n)+50.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.008;  % Set time step
+delta_t_update = 0.01;  % Set time step - ORIGINALLY 0.008
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET NODES AND CHECKS DURING ITERATIONS ===============
@@ -50,7 +50,7 @@ mov(1:nFrames) = struct('cdata', [],'colormap', []); % Preallocate movie structu
 
 for iteration =1:length(t)
     [Nei_agent, A] = findNeighbors(nodes, r);
-    [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
+    [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -76,7 +76,7 @@ for iteration =1:length(t)
 mov(iteration) = getframe;
 hold off
 end  
-% used to movie2avi
+% used to be movie2avi
 v = VideoWriter('flocking.avi');
 open(v)
 writeVideo(v, mov)
@@ -97,7 +97,9 @@ hold on
 figure(4),plot(Connectivity)
 grid on
 %======================= PLOT TRAJECTORY OF SENSOR NODES ===============
+length(q_nodes_all)
 for i = 2:length(q_nodes_all)                    
+    i
     tmp8 = q_nodes_all{i};
     figure(5), plot(tmp8(:,1), tmp8(:,2), 'k.')
     hold on
@@ -172,8 +174,8 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
 %     A : double matrix (100x100)
 %         The adjacency matrix of nodes
 
-    num_nodes = size(nodes,1);
-    Nei_agent = cell(num_nodes,1);  % Initialize cell array to hold indices of neighbors
+    num_nodes = size(nodes, 1);
+    Nei_agent = cell(num_nodes, 1);  % Initialize cell array to hold indices of neighbors
     
     % Iterate through each node i
     for i = 1:num_nodes
@@ -182,7 +184,7 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
            q1 = [nodes(i,1) nodes(i,2)];    % Set q1 with node i values
            q2 = [nodes(j,1) nodes(j,2)];    % Set q2 with node j values
            dist = norm(q1-q2);  % Euclidean norm of q1 and q2
-           if i~= j && dist <= range
+           if i~= j && dist <= range && dist ~= 0
               Nei_agent{i} = [Nei_agent{i} j];  %Add j to list of i's neighbors
            end
         end
