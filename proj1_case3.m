@@ -66,7 +66,7 @@ for iteration =1:length(t)
 %     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
     
     [Nei_agent, A] = findNeighbors(nodes, r);
-    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:));
+    [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:));
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -126,7 +126,7 @@ plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFac
 
 %================= FUNCTIONS ===============
 
-function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt)
+function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt)
 %     Function for generating the Ui controller of the MSN.
 %     
 %     Parameters
