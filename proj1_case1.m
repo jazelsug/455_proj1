@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 50.*rand(num_nodes,n)+50.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.01;  % Set time step - ORIGINALLY 0.008
+delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET NODES AND CHECKS DURING ITERATIONS ===============
@@ -97,9 +97,7 @@ hold on
 figure(4),plot(Connectivity)
 grid on
 %======================= PLOT TRAJECTORY OF SENSOR NODES ===============
-length(q_nodes_all)
-for i = 2:length(q_nodes_all)                    
-    i
+for i = 2:length(q_nodes_all)
     tmp8 = q_nodes_all{i};
     figure(5), plot(tmp8(:,1), tmp8(:,2), 'k.')
     hold on
