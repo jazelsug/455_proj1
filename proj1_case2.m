@@ -1,6 +1,6 @@
-% Name: proj1_case1.m
+% Name: proj1_case2.m
 % Author: Jazel A. Suguitan
-% Last Modified: Sept. 30, 2021
+% Last Modified: Oct. 1, 2021
 
 clc,clear
 close all
@@ -9,8 +9,8 @@ close all
 
 %================= SET PARAMETERS ===============
 
-d = 15; % Set desired distance among sensor nodes
-k_scale = 1.2;  % Set the scale of MSN: 
+d = 5; % Set desired distance among sensor nodes - ORIGINALLY 15
+k_scale = 1.2;  % Set the scale of MSN - ORIGINALLY 1.2
 r = k_scale * d;  % Set the active range
 r_prime = .22 * k_scale * r;    % Set the active range of beta agent
 epsilon = 0.1;  % Set a constant for sigma norm
@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 150.*rand(num_nodes,n)+150.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008
+delta_t_update = 0.0108;  % Set time step - ORIGINALLY 0.008, THEN 0.04
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
@@ -40,21 +40,24 @@ mov(1:nFrames) = struct('cdata', [],'colormap', []); % Preallocate movie structu
 %================= START ITERATION ===============
 
 for iteration =1:length(t)
-    qt_x1 = 200 + 130*t(iteration);
-    qt_y1 = 200+1*t(iteration); 
-    %compute position of target 
-    qt1(iteration,:) = [qt_x1, qt_y1];
-    %compute velocities of target
-    if iteration >1
-    pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
-    else
-        continue
-    end  
+%     qt_x1 = 200 + 130*t(iteration);
+%     qt_y1 = 200+1*t(iteration); 
+%     %compute position of target 
+%     qt1(iteration,:) = [qt_x1, qt_y1];
+%     %compute velocities of target
+%     if iteration >1
+%     pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
+%     else
+%         continue
+%     end  
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
     
+%     [Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findneighbors(nodes_old,nodes,r, r_prime,obstacles, Rk,n, p_nodes,delta_t_update);
+%     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
+    
     [Nei_agent, A] = findNeighbors(nodes, r);
-    [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n);
+    [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -80,11 +83,13 @@ for iteration =1:length(t)
 mov(iteration) = getframe;
 hold off
 end  
-% used to be movie2avi
-v = VideoWriter('flocking.avi');
-open(v)
-writeVideo(v, mov)
-close(v)
+
+%======================== MAKE AVI ===========================
+% % used to be movie2avi
+% v = VideoWriter('flocking.avi');
+% open(v)
+% writeVideo(v, mov)
+% close(v)
 
 %======================== PLOT VELOCITY OF MSN ===========================
 p_each_nodes = [];
@@ -112,7 +117,7 @@ plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFac
 
 %================= FUNCTIONS ===============
 
-function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions)
+function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt)
 %     Function for generating the Ui controller of the MSN.
 %     
 %     Parameters
@@ -133,6 +138,8 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
 %         The velocities of nodes, given in x and y directions
 %     dimensions : double
 %         The number of dimensions in which the MSN is operating
+%     q_mt : double array (1x2)
+%         The position of the static target.
 %         
 %     Returns
 %     -------------
@@ -142,9 +149,11 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
     % Set constants
     c1_alpha = 30;
     c2_alpha = 2*sqrt(c1_alpha);
+    c1_mt = 1.1;    % ORIGINALLY 1.1
     Ui = zeros(num_nodes, dimensions);  % initialize Ui matrix to all 0's
     gradient = 0.;  % Initialize gradient part of Ui equation
     consensus = 0.; % Initialize consensus part of Ui equation
+    feedback = 0.;  % Initialize navigational feedback of Ui equation
     
     % Sum gradient and consensus values for each node i
     for i = 1:num_nodes
@@ -155,7 +164,8 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
             gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
             consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
-        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);   % Set Ui for node i using gradient and consensus
+        feedback = nodes(i,:) - q_mt;
+        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) - (c1_mt * feedback);   % Set Ui for node i using gradient, consensus, and feedback
     end
 end
 
