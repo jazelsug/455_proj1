@@ -1,6 +1,6 @@
 % Name: proj1_case3.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 1, 2021
+% Last Modified: Oct. 4, 2021
 
 clc,clear
 close all
@@ -9,7 +9,7 @@ close all
 
 %================= SET PARAMETERS ===============
 
-d = 5; % Set desired distance among sensor nodes - ORIGINALLY 15
+d = 15; % Set desired distance among sensor nodes - ORIGINALLY 15
 k_scale = 1.2;  % Set the scale of MSN - ORIGINALLY 1.2
 r = k_scale * d;  % Set the active range
 r_prime = .22 * k_scale * r;    % Set the active range of beta agent
@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 150.*rand(num_nodes,n)+150.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.0108;  % Set time step - ORIGINALLY 0.008, THEN 0.04
+delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
@@ -352,8 +352,22 @@ function result = phi(z)
     b = 5;
     c = abs(a-b) / sqrt(4*a*b);
     
-    sigma1 = z / sqrt(1+z^2);
-    result = 0.5*((a+b)*sigma1*(z+c) + (a-b));
+    sigmaZ = sigma(z+c);
+    result = 0.5*((a+b)*sigmaZ + (a-b));
+end
+
+function result = sigma(z)
+%     A function to be used in the phi function.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%     
+%     Returns
+%     -----------
+%     result : double
+
+    result = z / sqrt(1+z^2);
 end
 
 function result = aij(i, j, epsilon, r)
