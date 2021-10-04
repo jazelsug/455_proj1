@@ -115,6 +115,7 @@ figure(3), plot(p_each_nodes, 'b')
 hold on
 figure(4),plot(Connectivity)
 grid on
+
 %======================= PLOT TRAJECTORY OF SENSOR NODES ===============
 for i = 2:length(q_nodes_all)
     tmp8 = q_nodes_all{i};
@@ -123,6 +124,11 @@ for i = 2:length(q_nodes_all)
 end
 hold on
 plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',5)
+
+%========================PLOT TRAJECTORY OF COM AND TARGET===============                
+figure(6), plot(q_mean(:,1),q_mean(:,2),'k.')
+hold on
+plot(qt1(:,1), qt1(:,2),'r.')
 
 
 %================= FUNCTIONS ===============
