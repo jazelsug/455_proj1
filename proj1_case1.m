@@ -1,6 +1,6 @@
 % Name: proj1_case1.m
 % Author: Jazel A. Suguitan
-% Last Modified: Sept. 30, 2021
+% Last Modified: Oct. 4, 2021
 
 clc,clear
 close all
@@ -77,10 +77,10 @@ mov(iteration) = getframe;
 hold off
 end  
 % used to be movie2avi
-v = VideoWriter('flocking.avi');
-open(v)
-writeVideo(v, mov)
-close(v)
+% v = VideoWriter('flocking.avi');
+% open(v)
+% writeVideo(v, mov)
+% close(v)
 
 %======================== PLOT VELOCITY OF MSN ===========================
 p_each_nodes = [];
@@ -326,8 +326,22 @@ function result = phi(z)
     b = 5;
     c = abs(a-b) / sqrt(4*a*b);
     
-    sigma1 = z / sqrt(1+z^2);
-    result = 0.5*((a+b)*sigma1*(z+c) + (a-b));
+    sigmaZ = sigma(z+c);
+    result = 0.5*((a+b)*sigmaZ + (a-b));
+end
+
+function result = sigma(z)
+%     A function to be used in the phi function.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%     
+%     Returns
+%     -----------
+%     result : double
+
+    result = z / sqrt(1+z^2);
 end
 
 function result = aij(i, j, epsilon, r)
