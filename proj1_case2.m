@@ -1,6 +1,6 @@
 % Name: proj1_case2.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 1, 2021
+% Last Modified: Oct. 4, 2021
 
 clc,clear
 close all
@@ -9,7 +9,7 @@ close all
 
 %================= SET PARAMETERS ===============
 
-d = 5; % Set desired distance among sensor nodes - ORIGINALLY 15
+d = 8; % Set desired distance among sensor nodes - ORIGINALLY 15
 k_scale = 1.2;  % Set the scale of MSN - ORIGINALLY 1.2
 r = k_scale * d;  % Set the active range
 r_prime = .22 * k_scale * r;    % Set the active range of beta agent
