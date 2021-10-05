@@ -302,13 +302,17 @@ function result = nij(i, j, epsilon)
 end
 
 function result = nik(i, k, epsilon, radius)
-    mu = radius/norm(i-k);
-    q_ik = mu*i + (1-mu)*k;
+    q_ik = qik(i, k, radius);
     
     numerator = q_ik - i;
     denominator = sqrt(1 + epsilon * (norm(q_ik-i))^2);
     
     result = numerator/denominator;
+end
+
+function result = qik(i, k, radius)
+    mu = radius/norm(i-k);
+    result = mu*i + (1-mu)*k;
 end
 
 function result = bump(z)
