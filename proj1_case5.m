@@ -302,6 +302,24 @@ function result = nij(i, j, epsilon)
 end
 
 function result = nik(i, k, epsilon, radius)
+%     Function to be used in the beta term of Ui.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%     epsilon : double
+%         A constant for the sigma norm
+%     radius : double
+%         The radius of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double (1x2)
+%         n_i,k
+
     q_ik = qik(i, k, radius);
     
     numerator = q_ik - i;
@@ -311,15 +329,67 @@ function result = nik(i, k, epsilon, radius)
 end
 
 function result = qik(i, k, radius)
+%     Function for the position of a beta agent for node i to obstacle k.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%     radius : double
+%         The radius of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double (1x)
+%         The position of the beta agent.
+
     mu = mu(i, k, radius);
     result = mu*i + (1-mu)*k;
 end
 
 function result = mu(i, k, radius)
+%     Function for obtaining mu, to be used in qik and pik.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%     radius : double
+%         The radius of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double
+%         mu
+
     result = radius/norm(i-k);
 end
 
 function result = bik(i, k, d, radius, epsilon)
+%     Function for obtaining the smoothening of the beta Ui term.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%     d : double
+%         The desired distance among nodes in the MSN
+%     radius : double
+%         The radius of obstacle k
+%     epsilon : double
+%         A constant for the sigma norm
+%         
+%     Returns
+%     ------------
+%     result : double
+%         b_i,k(q)
+
     q_ik = qik(i, k, radius);
     d_beta = sigmaNorm(d, epsilon); %CHECK
     sig = sigmaNorm(q_ik - i, epsilon);
@@ -328,10 +398,38 @@ function result = bik(i, k, d, radius, epsilon)
 end
 
 function result = ak(i, k)
+%     Function for getting the unit normal.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double matrix
+%         The unit normal
+    
     result = (i-k)/norm(i-k);
 end
 
 function result = p_mat(i, k)
+%     Function for obtaining P, to be used in the pik function.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double matrix
+%         The P matrix to be used in finding a beta agent's velocity
+
     a_k = ak(i,k);
     ak_akT = a_k * transpose(a_k);  %CHECK
     I = eye(size(ak_akT,1), size(ak_akT,2));
@@ -339,7 +437,7 @@ function result = p_mat(i, k)
 end
 
 function result = pik(i, k, radius, p_i)
-%     Function for obtaining the velocitiy of the beta agent.
+%     Function for obtaining the velocitiy of the beta agent for node i to obstacle k.
 %     
 %     Parameters
 %     ------------
