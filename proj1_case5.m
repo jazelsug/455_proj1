@@ -327,6 +327,17 @@ function result = bik(i, k, d, radius, epsilon)
     result = bump(sig/d_beta);
 end
 
+function result = ak(i, k)
+    result = (i-k)/norm(i-k);
+end
+
+function result = p_mat(i, k)
+    a_k = ak(i,k);
+    ak_akT = a_k * transpose(a_k);
+    I = eye(size(ak_akT,1), size(ak_akT,2));
+    result = I - ak_akT;
+end
+
 function result = bump(z)
 %     A scalar function varying between 0 and 1. Used for construction of smooth potential functions with finite cut-offs and smooth adj. matrices.
 %     
