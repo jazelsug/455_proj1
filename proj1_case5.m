@@ -1,6 +1,6 @@
 % Name: proj1_case5.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 4, 2021
+% Last Modified: Oct. 5, 2021
 
 clc,clear
 close all
@@ -298,6 +298,16 @@ function result = nij(i, j, epsilon)
     
     numerator = j - i;
     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
+    result = numerator/denominator;
+end
+
+function result = nik(i, k, epsilon, radius)
+    mu = radius/norm(i-k);
+    q_ik = mu*i + (1-mu)*k;
+    
+    numerator = q_ik - i;
+    denominator = sqrt(1 + epsilon * (norm(q_ik-i))^2);
+    
     result = numerator/denominator;
 end
 
