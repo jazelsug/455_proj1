@@ -325,6 +325,12 @@ function result = bump(z)
     end
 end
 
+function result = phi_beta(z, d, epsilon)
+    d_beta = 0; %EDIT LATER
+    
+    result = 0;
+end
+
 function result = phi_alpha(z, r, d, epsilon)
 %     The action function used to construct a smooth pairwise potential
 %     with finite cut-off in the gradient-based term of the Alg.1 Ui.
@@ -366,8 +372,22 @@ function result = phi(z)
     b = 5;
     c = abs(a-b) / sqrt(4*a*b);
     
-    sigma1 = z / sqrt(1+z^2);
-    result = 0.5*((a+b)*sigma1*(z+c) + (a-b));
+    sigmaZ = sigma(z+c);
+    result = 0.5*((a+b)*sigmaZ + (a-b));
+end
+
+function result = sigma(z)
+%     A function to be used in the phi function.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%     
+%     Returns
+%     -----------
+%     result : double
+
+    result = z / sqrt(1+z^2);
 end
 
 function result = aij(i, j, epsilon, r)
