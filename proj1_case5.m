@@ -214,8 +214,11 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
 
     num_nodes = size(nodes, 1);
     Nei_agent = cell(num_nodes, 1);  % Initialize cell array to hold indices of neighbors
+    %INITIAL BETA AGENT INCORPORATION
+    Nei_beta_agent = cell(num_nodes, 1);
+    num_obstacles = size(obstacles, 1); %EDIT - need to pass in obstacles to findNeighbors
     
-    % Iterate through each node i
+    % Iterate through each node i for Nei_agent
     for i = 1:num_nodes
         for j = 1:num_nodes
            % Check each node j if it's a neighbor of node i
@@ -224,6 +227,17 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
            dist = norm(q1-q2);  % Euclidean norm of q1 and q2
            if i~= j && dist <= range && dist ~= 0
               Nei_agent{i} = [Nei_agent{i} j];  %Add j to list of i's neighbors
+           end
+        end
+    end
+    
+    % Iterate through each node i for Nei_beta_agent - CHECK
+    for i = 1:num_nodes
+        for j = 1:num_obstacles
+           % Check if obstacle j is in the interaction range of node i
+           beta_pos = qik(nodes(i,:), obstacles(k,:), radius);
+           if norm(beta_pos - nodes(i,:) <= r
+              Nei_beta_agent{i} = [Nei_beta_agent{i} j];
            end
         end
     end
