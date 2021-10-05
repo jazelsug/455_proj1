@@ -236,7 +236,7 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
         for j = 1:num_obstacles
            % Check if obstacle j is in the interaction range of node i
            beta_pos = qik(nodes(i,:), obstacles(k,:), radius);
-           if norm(beta_pos - nodes(i,:) <= r
+           if norm(beta_pos - nodes(i,:) <= range
               Nei_beta_agent{i} = [Nei_beta_agent{i} j];
            end
         end
