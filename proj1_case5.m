@@ -333,9 +333,31 @@ end
 
 function result = p_mat(i, k)
     a_k = ak(i,k);
-    ak_akT = a_k * transpose(a_k);
+    ak_akT = a_k * transpose(a_k);  %CHECK
     I = eye(size(ak_akT,1), size(ak_akT,2));
     result = I - ak_akT;
+end
+
+function result = pik(i, k, radius, p_i)
+%     Function for obtaining the velocitiy of the beta agent.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%     radius : double
+%         The radius of obstacle k
+%     p_i : double (1x2)
+%         The velocity of node i
+%         
+%     Returns
+%     -------------
+%     result : double (1x2)
+%         The velocity of the beta agent
+    
+    result = mu(i, k, radius) * p_mat(i, k) * p_i;
 end
 
 function result = bump(z)
