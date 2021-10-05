@@ -1,6 +1,6 @@
 % Name: proj1_case5.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 3, 2021
+% Last Modified: Oct. 4, 2021
 
 clc,clear
 close all
@@ -326,9 +326,9 @@ function result = bump(z)
 end
 
 function result = phi_beta(z, d, epsilon)
-    d_beta = 0; %EDIT LATER
+    d_beta = sigmaNorm(d, epsilon); %EDIT LATER, = sigma norm of d' (what is d'??)
     
-    result = 0;
+    result = bump(z/d_beta) * (sigma(z-d_beta) - 1);
 end
 
 function result = phi_alpha(z, r, d, epsilon)
