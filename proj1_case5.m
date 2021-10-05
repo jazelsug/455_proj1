@@ -9,7 +9,7 @@ close all
 
 %================= SET PARAMETERS ===============
 
-d = 5; % Set desired distance among sensor nodes - ORIGINALLY 15
+d = 15; % Set desired distance among sensor nodes - ORIGINALLY 15
 k_scale = 1.2;  % Set the scale of MSN - ORIGINALLY 1.2
 r = k_scale * d;  % Set the active range
 r_prime = .22 * k_scale * r;    % Set the active range of beta agent
@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 50.*rand(num_nodes,n)+50.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.0108;  % Set time step - ORIGINALLY 0.008, THEN 0.04
+delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
@@ -122,6 +122,7 @@ figure(3), plot(p_each_nodes, 'b')
 hold on
 figure(4),plot(Connectivity)
 grid on
+
 %======================= PLOT TRAJECTORY OF SENSOR NODES ===============
 for i = 2:length(q_nodes_all)
     tmp8 = q_nodes_all{i};
@@ -130,6 +131,11 @@ for i = 2:length(q_nodes_all)
 end
 hold on
 plot(nodes(:,1),nodes(:,2), 'm>','LineWidth',.2,'MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',5)
+
+%========================PLOT TRAJECTORY OF COM AND TARGET===============                
+figure(6), plot(q_mean(:,1),q_mean(:,2),'k.')
+hold on
+plot(qt1(:,1), qt1(:,2),'r.')
 
 
 %================= FUNCTIONS ===============
