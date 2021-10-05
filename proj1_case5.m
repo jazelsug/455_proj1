@@ -311,8 +311,12 @@ function result = nik(i, k, epsilon, radius)
 end
 
 function result = qik(i, k, radius)
-    mu = radius/norm(i-k);
+    mu = mu(i, k, radius);
     result = mu*i + (1-mu)*k;
+end
+
+function result = mu(i, k, radius)
+    result = radius/norm(i-k);
 end
 
 function result = bik(i, k, d, radius, epsilon)
