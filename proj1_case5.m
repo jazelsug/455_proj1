@@ -315,6 +315,14 @@ function result = qik(i, k, radius)
     result = mu*i + (1-mu)*k;
 end
 
+function result = bik(i, k, d, radius, epsilon)
+    q_ik = qik(i, k, radius);
+    d_beta = sigmaNorm(d, epsilon); %CHECK
+    sig = sigmaNorm(q_ik - i, epsilon);
+    
+    result = bump(sig/d_beta);
+end
+
 function result = bump(z)
 %     A scalar function varying between 0 and 1. Used for construction of smooth potential functions with finite cut-offs and smooth adj. matrices.
 %     
