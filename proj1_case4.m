@@ -1,6 +1,6 @@
 % Name: proj1_case4.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 4, 2021
+% Last Modified: Oct. 6, 2021
 
 clc,clear
 close all
@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 150.*rand(num_nodes,n)+150.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
+delta_t_update = 0.008;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
@@ -176,15 +176,18 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
     
     % Sum gradient and consensus values for each node i
     for i = 1:num_nodes
-        for j = 1:size(Nei_agent{i},1)
+        for j = 1:length(Nei_agent{i})
             % i refers to node i
             % j refers to the jth neighbor of node i
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
-            gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
-            consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
+            gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
+            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
         end
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback;   % Set Ui for node i using gradient, consensus, and feedback
+        gradient = 0;
+        consensus = 0;
+        feedback = 0;
     end
 end
 
@@ -289,9 +292,14 @@ function result = nij(i, j, epsilon)
 %     result : double array (1x2)
 %           The vector along the line connecting node i and node j
     
-    numerator = j - i;
-    denominator = sqrt(1 + epsilon * (norm(j-i))^2);
-    result = numerator/denominator;
+%     numerator = j - i;
+%     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
+%     result = numerator/denominator;
+    result = sigmaE(j-i, epsilon);
+end
+
+function result = sigmaE(z, epsilon)
+    result = z / (1 + epsilon * sigmaNorm(z, epsilon));
 end
 
 function result = bump(z)
@@ -359,11 +367,11 @@ function result = phi(z)
     b = 5;
     c = abs(a-b) / sqrt(4*a*b);
     
-    sigmaZ = sigma(z+c);
+    sigmaZ = sigma1(z+c);
     result = 0.5*((a+b)*sigmaZ + (a-b));
 end
 
-function result = sigma(z)
+function result = sigma1(z)
 %     A function to be used in the phi function.
 %     
 %     Parameters
@@ -396,8 +404,11 @@ function result = aij(i, j, epsilon, r)
 %     result : double array (1x2)
 %           The spatial adjacency matrix
     
-    r_alpha = sigmaNorm(r, epsilon);
-    input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
-    result = zeros(size(i));    % result is a 1x2 matrix
-    result = bump(input_to_bump);
+    result = zeros(size(i));    % result is a 1x2 matrix - CHECK
+    
+    if ~isequal(i,j)
+        r_alpha = sigmaNorm(r, epsilon);
+        input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
+        result = bump(input_to_bump);
+    end
 end
