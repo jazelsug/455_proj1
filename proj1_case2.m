@@ -277,8 +277,7 @@ function result = nij(i, j, epsilon)
 end
 
 function result = sigmaE(z, epsilon)
-    result = z / (1 + epsilon * sigmaNorm(z, epsilon))
-    result2 = z / sqrt(1 + epsilon * (norm(z))^2)
+    result = z / (1 + epsilon * sigmaNorm(z, epsilon));
 end
 
 function result = bump(z)
