@@ -105,12 +105,13 @@ p_each_nodes = [];
 for i = 2:size(t,2)                    
     tmp7 = p_nodes_all{i};
     for j = 1:num_nodes
-     if j ==1 %Plot velociy of sensor node 1; you can change this number to plot for other nodes
-       p_each_nodes(i) =  norm(tmp7(j,:));
-    end
+%      if j ==1 %Plot velociy of sensor node 1; you can change this number to plot for other nodes
+%        p_each_nodes(i) =  norm(tmp7(j,:));
+%     end
+        p_each_nodes(i,j) =  norm(tmp7(j,:));
     end
 end
-figure(3), plot(p_each_nodes, 'b')
+figure(3), plot(p_each_nodes)%, 'b')
 hold on
 figure(4),plot(Connectivity)
 grid on
