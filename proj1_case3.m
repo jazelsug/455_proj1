@@ -10,10 +10,10 @@ close all
 %================= SET PARAMETERS ===============
 
 d = 15; % Set desired distance among sensor nodes - ORIGINALLY 15
-k_scale = 1.2;  % Set the scale of MSN - ORIGINALLY 1.2
+k_scale = 1.18;  % Set the scale of MSN - ORIGINALLY 1.2
 r = k_scale * d;  % Set the active range
 r_prime = .22 * k_scale * r;    % Set the active range of beta agent
-epsilon = 0.1;  % Set a constant for sigma norm
+epsilon = 0.03;  % Set a constant for sigma norm, ORIGINALLY 0.1
 num_nodes = 100;    % Set number of sensor nodes
 n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
@@ -165,9 +165,9 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
 %         Controls the positions of the nodes in the MSN as time progresses
 
     % Set constants
-    c1_alpha = 32;
+    c1_alpha = 32;  %ORIGINALLY 30
     c2_alpha = 2*sqrt(c1_alpha);
-    c1_mt = 2.9;    % ORIGINALLY 1.1
+    c1_mt = 3.1;    % ORIGINALLY 1.1, THEN 2.9
     c2_mt = 2*sqrt(c1_mt);
     Ui = zeros(num_nodes, dimensions);  % initialize Ui matrix to all 0's
     gradient = 0.;  % Initialize gradient part of Ui equation
@@ -181,8 +181,6 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
             % j refers to the jth neighbor of node i
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
-            i,j, p_nodes(Nei_agent{i}(j),:)
-            p_nodes(j,:)
             consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
         end
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
