@@ -1,6 +1,6 @@
 % Name: proj1_case3.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 6, 2021
+% Last Modified: Oct. 7, 2021
 
 clc,clear
 close all
@@ -165,9 +165,9 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
 %         Controls the positions of the nodes in the MSN as time progresses
 
     % Set constants
-    c1_alpha = 30;
+    c1_alpha = 32;
     c2_alpha = 2*sqrt(c1_alpha);
-    c1_mt = 1.1;    % ORIGINALLY 1.1
+    c1_mt = 2.9;    % ORIGINALLY 1.1
     c2_mt = 2*sqrt(c1_mt);
     Ui = zeros(num_nodes, dimensions);  % initialize Ui matrix to all 0's
     gradient = 0.;  % Initialize gradient part of Ui equation
@@ -181,7 +181,9 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
             % j refers to the jth neighbor of node i
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
-            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
+            i,j, p_nodes(Nei_agent{i}(j),:)
+            p_nodes(j,:)
+            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
         end
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback;   % Set Ui for node i using gradient, consensus, and feedback
