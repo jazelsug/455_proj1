@@ -150,7 +150,7 @@ function [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r,
             % j refers to the jth neighbor of node i
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
-            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(j,:) - p_nodes(i,:));
+            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
         end
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus);   % Set Ui for node i using gradient and consensus
         gradient = 0;
