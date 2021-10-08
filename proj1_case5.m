@@ -435,7 +435,7 @@ function result = aij(i, j, epsilon, r)
     end
 end
 
-%START OF CASE 5 FUNCTIONS
+%=======================START OF CASE 5 FUNCTIONS==============================
 
 function result = nik(i, k, epsilon, radius)
 %     Function to be used in the beta term of Ui.
@@ -481,8 +481,8 @@ function result = qik(i, k, radius)
 %     result : double (1x)
 %         The position of the beta agent.
 
-    mu = mu(i, k, radius);
-    result = mu*i + (1-mu)*k;
+    mu1 = mu(i, k, radius);
+    result = mu1*i + (1-mu1)*k;
 end
 
 function result = mu(i, k, radius)
@@ -527,49 +527,10 @@ function result = bik(i, k, d, radius, epsilon)
 %         b_i,k(q)
 
     q_ik = qik(i, k, radius);
-    d_beta = sigmaNorm(d, epsilon); %CHECK
+    d_beta = sigmaNorm(d, epsilon);
     sig = sigmaNorm(q_ik - i, epsilon);
     
     result = bump(sig/d_beta);
-end
-
-function result = ak(i, k)
-%     Function for getting the unit normal.
-%     
-%     Parameters
-%     ------------
-%     i : double (1x2)
-%         The position of node i
-%     k : double (1x2)
-%         The position of obstacle k
-%         
-%     Returns
-%     ------------
-%     result : double matrix
-%         The unit normal
-    
-    result = (i-k)/norm(i-k);
-end
-
-function result = p_mat(i, k)
-%     Function for obtaining P, to be used in the pik function.
-%     
-%     Parameters
-%     ------------
-%     i : double (1x2)
-%         The position of node i
-%     k : double (1x2)
-%         The position of obstacle k
-%         
-%     Returns
-%     ------------
-%     result : double matrix
-%         The P matrix to be used in finding a beta agent's velocity
-
-    a_k = ak(i,k);
-    ak_akT = a_k * transpose(a_k);  %CHECK
-    I = eye(size(ak_akT,1), size(ak_akT,2));
-    result = I - ak_akT;
 end
 
 function result = pik(i, k, radius, p_i)
@@ -594,8 +555,47 @@ function result = pik(i, k, radius, p_i)
     result = mu(i, k, radius) * p_mat(i, k) * p_i;
 end
 
-function result = phi_beta(z, d, epsilon)
-    d_beta = sigmaNorm(d, epsilon); %EDIT LATER, = sigma norm of d' (what is d'??)
+function result = p_mat(i, k)
+%     Function for obtaining P, to be used in the pik function.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double matrix
+%         The P matrix to be used in finding a beta agent's velocity
+
+    a_k = ak(i,k);
+    ak_akT = a_k * transpose(a_k);
+    I = eye(size(ak_akT,1), size(ak_akT,2));
+    result = I - ak_akT;
+end
+
+function result = ak(i, k)
+%     Function for getting the unit normal.
+%     
+%     Parameters
+%     ------------
+%     i : double (1x2)
+%         The position of node i
+%     k : double (1x2)
+%         The position of obstacle k
+%         
+%     Returns
+%     ------------
+%     result : double matrix
+%         The unit normal
     
-    result = bump(z/d_beta) * (sigma(z-d_beta) - 1);
+    result = (i-k)/norm(i-k);
+end
+
+function result = phi_beta(z, d, epsilon)
+    d_beta = sigmaNorm(d, epsilon);
+    
+    result = bump(z/d_beta) * (sigma1(z-d_beta) - 1);
 end
