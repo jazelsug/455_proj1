@@ -1,6 +1,6 @@
-% Name: proj1_case5.m
+% Name: proj1_case4.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 5, 2021
+% Last Modified: Oct. 8, 2021
 
 clc,clear
 close all
@@ -19,7 +19,7 @@ n = 2;  % Set number of dimensions
 %nodes = load('node_distribution2.dat'); % distributed in 2D
 nodes = 50.*rand(num_nodes,n)+50.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
-delta_t_update = 0.04;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
+delta_t_update = 0.008;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
 t = 0:delta_t_update:7; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
@@ -52,21 +52,21 @@ for iteration =1:length(t)
 %     qt_y1 = 295 - 50*sin(t(iteration));
     
 %   Circle Trajectory of a moving target 
-   qt_x1 = 310 - 160*cos(t(iteration));
-   qt_y1 = 255 + 160*sin(t(iteration));
+%    qt_x1 = 310 - 160*cos(t(iteration));
+%    qt_y1 = 255 + 160*sin(t(iteration));
 
 %    Line Trajectory of a moving target 
 %     qt_x1 = 200 + 130*t(iteration);
 %     qt_y1 = 200+1*t(iteration); 
 
-    %compute position of target 
-    qt1(iteration,:) = [qt_x1, qt_y1];
-    %compute velocities of target
-    if iteration >1
-    pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
-    else
-        continue
-    end  
+%     %compute position of target 
+%     qt1(iteration,:) = [qt_x1, qt_y1];
+%     %compute velocities of target
+%     if iteration >1
+%     pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
+%     else
+%         continue
+%     end  
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
     
@@ -173,7 +173,7 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
 %         Controls the positions of the nodes in the MSN as time progresses
 
     % Set constants
-    c1_alpha = 30;
+    c1_alpha = 30;  %ORIGINALLY 30
     c2_alpha = 2*sqrt(c1_alpha);
     c1_mt = 1.1;    % ORIGINALLY 1.1
     c2_mt = 2*sqrt(c1_mt);
@@ -184,15 +184,18 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
     
     % Sum gradient and consensus values for each node i
     for i = 1:num_nodes
-        for j = 1:size(Nei_agent{i},1)
+        for j = 1:length(Nei_agent{i})
             % i refers to node i
             % j refers to the jth neighbor of node i
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
-            gradient = phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
-            consensus = aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
+            gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
+            consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
         end
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback;   % Set Ui for node i using gradient, consensus, and feedback
+        gradient = 0;
+        consensus = 0;
+        feedback = 0;
     end
 end
 
@@ -219,7 +222,7 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
     Nei_beta_agent = cell(num_nodes, 1);
     num_obstacles = size(obstacles, 1); %EDIT - need to pass in obstacles to findNeighbors
     
-    % Iterate through each node i for Nei_agent
+    % Iterate through each node i
     for i = 1:num_nodes
         for j = 1:num_nodes
            % Check each node j if it's a neighbor of node i
@@ -311,10 +314,128 @@ function result = nij(i, j, epsilon)
 %     result : double array (1x2)
 %           The vector along the line connecting node i and node j
     
-    numerator = j - i;
-    denominator = sqrt(1 + epsilon * (norm(j-i))^2);
-    result = numerator/denominator;
+%     numerator = j - i;
+%     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
+%     result = numerator/denominator;
+    result = sigmaE(j-i, epsilon);
 end
+
+function result = sigmaE(z, epsilon)
+    result = z / (1 + epsilon * sigmaNorm(z, epsilon));
+end
+
+function result = bump(z)
+%     A scalar function varying between 0 and 1. Used for construction of smooth potential functions with finite cut-offs and smooth adj. matrices.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%           The input to be smoothened
+%     
+%     Returns
+%     -----------
+%     result : double
+%           The 0 or 1 value
+    
+    h = 0.2;    % Set constant h
+    
+    if z >= 0 && z < h
+        result = 1;
+    elseif z >= h && z <= 1
+        result = 0.5 * (1 + cos(pi*(z-h)/(1-h)));
+    else
+        result = 0;
+    end
+end
+
+function result = phi_alpha(z, r, d, epsilon)
+%     The action function used to construct a smooth pairwise potential
+%     with finite cut-off in the gradient-based term of the Alg.1 Ui.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%           Sigma norm value of two nodes
+%     r : double
+%           Interaction range of nodes in MSN
+%     d : double
+%           Desired distance of nodes in MSN
+%     espilon : double
+%           A constant for the sigma norm
+%     
+%     Returns
+%     -----------
+%     result : double
+%           Value to be used in Ui gradient-based term
+
+    r_alpha = sigmaNorm(r, epsilon);
+    d_alpha = sigmaNorm(d, epsilon);    %CHECK - is this what d alpha is?
+    result = bump(z/r_alpha) * phi(z-d_alpha);
+end
+
+function result = phi(z)
+%     An uneven sigmoidal function, used in the phi_alpha function.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%     
+%     Returns
+%     -----------
+%     result : double
+
+    %Set constants
+    a = 5;
+    b = 5;
+    c = abs(a-b) / sqrt(4*a*b);
+    
+    sigmaZ = sigma1(z+c);
+    result = 0.5*((a+b)*sigmaZ + (a-b));
+end
+
+function result = sigma1(z)
+%     A function to be used in the phi function.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%     
+%     Returns
+%     -----------
+%     result : double
+
+    result = z / sqrt(1+z^2);
+end
+
+function result = aij(i, j, epsilon, r)
+%     Returns the spatial adjacency matrix given the positions of two nodes, i and j.
+%     
+%     Parameters
+%     -------------
+%     i : double array (1x2)
+%           Position of node i
+%     j : double array (1x2)
+%           Position of node j
+%     epsilon : double
+%           Constant for sigma norm
+%     r : double
+%           Interaction range for nodes in MSN
+%     
+%     Returns
+%     -----------
+%     result : double array (1x2)
+%           The spatial adjacency matrix
+    
+    result = zeros(size(i));    % result is a 1x2 matrix - CHECK
+    
+    if ~isequal(i,j)
+        r_alpha = sigmaNorm(r, epsilon);
+        input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
+        result = bump(input_to_bump);
+    end
+end
+
+%START OF CASE 5 FUNCTIONS
 
 function result = nik(i, k, epsilon, radius)
 %     Function to be used in the beta term of Ui.
@@ -473,116 +594,8 @@ function result = pik(i, k, radius, p_i)
     result = mu(i, k, radius) * p_mat(i, k) * p_i;
 end
 
-function result = bump(z)
-%     A scalar function varying between 0 and 1. Used for construction of smooth potential functions with finite cut-offs and smooth adj. matrices.
-%     
-%     Parameters
-%     -------------
-%     z : double
-%           The input to be smoothened
-%     
-%     Returns
-%     -----------
-%     result : double
-%           The 0 or 1 value
-    
-    h = 0.2;    % Set constant h
-    
-    if z >= 0 && z < h
-        result = 1;
-    elseif z >= h && z <= 1
-        result = 0.5 * (1 + cos(pi*(z-h)/(1-h)));
-    else
-        result = 0;
-    end
-end
-
 function result = phi_beta(z, d, epsilon)
     d_beta = sigmaNorm(d, epsilon); %EDIT LATER, = sigma norm of d' (what is d'??)
     
     result = bump(z/d_beta) * (sigma(z-d_beta) - 1);
-end
-
-function result = phi_alpha(z, r, d, epsilon)
-%     The action function used to construct a smooth pairwise potential
-%     with finite cut-off in the gradient-based term of the Alg.1 Ui.
-%     
-%     Parameters
-%     -------------
-%     z : double
-%           Sigma norm value of two nodes
-%     r : double
-%           Interaction range of nodes in MSN
-%     d : double
-%           Desired distance of nodes in MSN
-%     espilon : double
-%           A constant for the sigma norm
-%     
-%     Returns
-%     -----------
-%     result : double
-%           Value to be used in Ui gradient-based term
-
-    r_alpha = sigmaNorm(r, epsilon);
-    d_alpha = sigmaNorm(d, epsilon);    %CHECK - is this what d alpha is?
-    result = bump(z/r_alpha) * phi(z-d_alpha);
-end
-
-function result = phi(z)
-%     An uneven sigmoidal function, used in the phi_alpha function.
-%     
-%     Parameters
-%     -------------
-%     z : double
-%     
-%     Returns
-%     -----------
-%     result : double
-
-    %Set constants
-    a = 5;
-    b = 5;
-    c = abs(a-b) / sqrt(4*a*b);
-    
-    sigmaZ = sigma(z+c);
-    result = 0.5*((a+b)*sigmaZ + (a-b));
-end
-
-function result = sigma(z)
-%     A function to be used in the phi function.
-%     
-%     Parameters
-%     -------------
-%     z : double
-%     
-%     Returns
-%     -----------
-%     result : double
-
-    result = z / sqrt(1+z^2);
-end
-
-function result = aij(i, j, epsilon, r)
-%     Returns the spatial adjacency matrix given the positions of two nodes, i and j.
-%     
-%     Parameters
-%     -------------
-%     i : double array (1x2)
-%           Position of node i
-%     j : double array (1x2)
-%           Position of node j
-%     epsilon : double
-%           Constant for sigma norm
-%     r : double
-%           Interaction range for nodes in MSN
-%     
-%     Returns
-%     -----------
-%     result : double array (1x2)
-%           The spatial adjacency matrix
-    
-    r_alpha = sigmaNorm(r, epsilon);
-    input_to_bump = sigmaNorm(j-i, epsilon) / r_alpha;
-    result = zeros(size(i));    % result is a 1x2 matrix
-    result = bump(input_to_bump);
 end
