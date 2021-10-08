@@ -73,8 +73,8 @@ for iteration =1:length(t)
 %     [Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findneighbors(nodes_old,nodes,r, r_prime,obstacles, Rk,n, p_nodes,delta_t_update);
 %     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
     
-    [Nei_agent, A] = findNeighbors(nodes, r);
-    [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:));
+    [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, r, obstacles);
+    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1, pt1, obstacles, Rk);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -85,6 +85,18 @@ for iteration =1:length(t)
     %p_mean(iteration,:) = mean(p_nodes); %Compute velocity of COM of MSN
     q_nodes_all{iteration} = nodes;
     Connectivity(iteration)= (1/(num_nodes))*rank(A);
+    
+    %================= DRAW OBSTACLES ===============
+    phiVal = 0:.1:2*pi;
+    for k = 1:num_obstacles
+        X = Rk(k)*cos(phiVal);
+        Y = Rk(k)*sin(phiVal);
+        plot(X+obstacles(k,1),Y+obstacles(k,2),'r',nodes(:,1),nodes(:,2), 'g>')
+        fill(X+obstacles(k,1),Y+obstacles(k,2),'r')
+        %axis([0 250 0 80]);
+        hold on
+    end
+
     
     %================= PLOT and LINK SENSOR TOGETHER ===============
     plot(nodes(:,1),nodes(:,2), '.')
@@ -141,7 +153,7 @@ plot(qt1(:,1), qt1(:,2),'r.')
 
 %================= FUNCTIONS ===============
 
-function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt)
+function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt, obstacles, Rk)
 %     Function for generating the Ui controller of the MSN.
 %     
 %     Parameters
@@ -177,10 +189,14 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
     c2_alpha = 2*sqrt(c1_alpha);
     c1_mt = 1.1;    % ORIGINALLY 1.1
     c2_mt = 2*sqrt(c1_mt);
+    c1_beta = 1500;
+    c2_beta = 2*sqrt(c1_beta);
     Ui = zeros(num_nodes, dimensions);  % initialize Ui matrix to all 0's
     gradient = 0.;  % Initialize gradient part of Ui equation
     consensus = 0.; % Initialize consensus part of Ui equation
     feedback = 0.;  % Initialize navigational feedback of Ui equation
+    beta_term1 = 0.;
+    beta_term2 = 0.;
     
     % Sum gradient and consensus values for each node i
     for i = 1:num_nodes
@@ -190,16 +206,25 @@ function [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r,
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
             consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
+            
+            phi_beta_in = sigmaNorm(qik(nodes(i,:), obstacles, Rk)-nodes(i,:), epsilon);
+            beta_term1 = beta_term1 + phi_beta(phi_beta_in, d, epsilon) * nik(nodes(i,:), obstacles, epsilon, Rk);  %EDIT - pass in Rk
+            
+            beta_term2 = beta_term2 + bik(nodes(i,:), obstacles, d, Rk, epsilon) * (pik(nodes(i,:), obstacles, Rk, p_nodes(i,:)) - p_nodes(i,:));
         end
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
-        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback;   % Set Ui for node i using gradient, consensus, and feedback
+        beta_total = (c1_beta * beta_term1) + (c2_beta * beta_term2);
+        Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback + beta_total;   % Set Ui for node i using gradient, consensus, and feedback
         gradient = 0;
         consensus = 0;
+        beta_term1 = 0;
+        beta_term2 = 0;
+        beta_total = 0;
         feedback = 0;
     end
 end
 
-function [Nei_agent, A] = findNeighbors(nodes, range)
+function [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, range, obstacles)
 %     Function for determining the neighbors of each node in a collection of nodes.
 %     
 %     Parameters
@@ -239,8 +264,8 @@ function [Nei_agent, A] = findNeighbors(nodes, range)
     for i = 1:num_nodes
         for j = 1:num_obstacles
            % Check if obstacle j is in the interaction range of node i
-           beta_pos = qik(nodes(i,:), obstacles(k,:), radius);
-           if norm(beta_pos - nodes(i,:) <= range
+           beta_pos = qik(nodes(i,:), obstacles(j,:), range);
+           if norm(beta_pos - nodes(i,:)) <= range
               Nei_beta_agent{i} = [Nei_beta_agent{i} j];
            end
         end
