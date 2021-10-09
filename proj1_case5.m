@@ -27,10 +27,10 @@ qt1 = [200,25]; %Set position of the static target (gamma agent)
 pt1= [0,0]; % %Set initial velocity of the target
 
 %================= SET OBSTACLES ===============
-obstacles = [100, 25];
-Rk = 15;
-% obstacles = [50, 100; 150 80; 200, 230; 280 150 ]; %set positions of obstacles
-% Rk = [20; 10; 15; 8]; %Radii of obstacles
+%obstacles = [100, 25];
+%Rk = 15;
+obstacles = [50, 100; 150 80; 200, 230; 280 150 ]; %set positions of obstacles
+Rk = [20; 10; 15; 8]; %Radii of obstacles
 num_obstacles = size(obstacles,1); %Find number of obstacles
 
 %================= SET NODES AND CHECKS DURING ITERATIONS ===============
@@ -74,7 +74,7 @@ for iteration =1:length(t)
 %     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
     
     [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, r, obstacles);
-    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1, pt1, obstacles, Rk);
+    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1, pt1, obstacles, Rk, Nei_beta_agent);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -153,7 +153,7 @@ plot(qt1(:,1), qt1(:,2),'r.')
 
 %================= FUNCTIONS ===============
 
-function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt, obstacles, Rk)
+function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, dimensions, q_mt, p_mt, obstacles, Rk, Nei_beta_agent)
 %     Function for generating the Ui controller of the MSN.
 %     
 %     Parameters
@@ -206,12 +206,17 @@ function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r,
             phi_alpha_in = sigmaNorm(nodes(Nei_agent{i}(j),:) - nodes(i,:), epsilon);
             gradient = gradient + phi_alpha(phi_alpha_in, r, d, epsilon) * nij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon);
             consensus = consensus + aij(nodes(i,:), nodes(Nei_agent{i}(j),:), epsilon, r) * (p_nodes(Nei_agent{i}(j),:) - p_nodes(i,:));
-            
-            phi_beta_in = sigmaNorm(qik(nodes(i,:), obstacles, Rk)-nodes(i,:), epsilon);
-            beta_term1 = beta_term1 + phi_beta(phi_beta_in, d, epsilon) * nik(nodes(i,:), obstacles, epsilon, Rk);  %EDIT - pass in Rk
-            
-            beta_term2 = beta_term2 + bik(nodes(i,:), obstacles, d, Rk, epsilon) * (pik(nodes(i,:), obstacles, Rk, p_nodes(i,:)) - p_nodes(i,:));
         end
+        
+        for k = 1:length(Nei_beta_agent{i})
+            % k refers to the kth beta agent of node i
+            whu = Rk(Nei_beta_agent{i}(k))
+            phsdf = Rk(Nei_beta_agent{i}(k),:)
+            phi_beta_in = sigmaNorm(qik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), Rk(Nei_beta_agent{i}(k)))-nodes(i,:), epsilon);
+            beta_term1 = beta_term1 + phi_beta(phi_beta_in, d, epsilon) * nik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), epsilon, Rk(Nei_beta_agent{i}(k)));
+            beta_term2 = beta_term2 + bik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), d, Rk(Nei_beta_agent{i}(k)), epsilon) * (pik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), Rk(Nei_beta_agent{i}(k)), p_nodes(i,:)) - p_nodes(i,:));
+        end
+        
         feedback = -(c1_mt * (nodes(i,:) - q_mt)) - (c2_mt * (p_nodes(i,:) - p_mt));
         beta_total = (c1_beta * beta_term1) + (c2_beta * beta_term2);
         Ui(i,:) = (c1_alpha * gradient) + (c2_alpha * consensus) + feedback + beta_total;   % Set Ui for node i using gradient, consensus, and feedback
