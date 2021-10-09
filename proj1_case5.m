@@ -1,4 +1,4 @@
-% Name: proj1_case4.m
+% Name: proj1_case5.m
 % Author: Jazel A. Suguitan
 % Last Modified: Oct. 8, 2021
 
@@ -20,7 +20,7 @@ n = 2;  % Set number of dimensions
 nodes = 50.*rand(num_nodes,n)+50.*repmat([0 1],num_nodes,1);  % Randomly generate initial positions of MSN
 p_nodes = zeros(num_nodes,n);   % Set initial velocties of MSN
 delta_t_update = 0.008;  % Set time step - ORIGINALLY 0.008, THEN 0.04, THEN 0.0108
-t = 0:delta_t_update:7; % Set simulation time
+t = 0:delta_t_update:8; % Set simulation time
 
 %================= SET A STATIC TARGET ===============
 qt1 = [200,25]; %Set position of the static target (gamma agent)
@@ -185,9 +185,9 @@ function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r,
 %         Controls the positions of the nodes in the MSN as time progresses
 
     % Set constants
-    c1_alpha = 35;  %ORIGINALLY 30
+    c1_alpha = 40;  %ORIGINALLY 30
     c2_alpha = 2*sqrt(c1_alpha);
-    c1_mt = 1.1;    % ORIGINALLY 1.1
+    c1_mt = 1.7;    % ORIGINALLY 1.1
     c2_mt = 2*sqrt(c1_mt);
     c1_beta = 1500;
     c2_beta = 2*sqrt(c1_beta);
