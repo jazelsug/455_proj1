@@ -29,7 +29,7 @@ pt1= [0,0]; % %Set initial velocity of the target
 %================= SET OBSTACLES ===============
 %obstacles = [100, 25];
 %Rk = 15;
-obstacles = [50, 100; 150 80; 200, 230; 280 150 ]; %set positions of obstacles
+obstacles = [100, 150; 150 80; 200, 230; 280 150 ]; %set positions of obstacles - first ORIGINALLY 50,100
 Rk = [20; 10; 15; 8]; %Radii of obstacles
 num_obstacles = size(obstacles,1); %Find number of obstacles
 
@@ -56,17 +56,17 @@ for iteration =1:length(t)
 %    qt_y1 = 255 + 160*sin(t(iteration));
 
 %    Line Trajectory of a moving target 
-%     qt_x1 = 200 + 130*t(iteration);
-%     qt_y1 = 200+1*t(iteration); 
+    qt_x1 = 200 + 15*t(iteration); %ORIGINALLY + 130t
+    qt_y1 = 200+1*t(iteration); 
 
 %     %compute position of target 
-%     qt1(iteration,:) = [qt_x1, qt_y1];
+    qt1(iteration,:) = [qt_x1, qt_y1];
 %     %compute velocities of target
-%     if iteration >1
-%     pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
-%     else
-%         continue
-%     end  
+    if iteration >1
+    pt1(iteration,:)=(qt1(iteration,:)-qt1(iteration-1,:))/delta_t_update;
+    else
+        continue
+    end  
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
     
@@ -74,7 +74,7 @@ for iteration =1:length(t)
 %     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
     
     [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, r, obstacles);
-    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1, pt1, obstacles, Rk, Nei_beta_agent);
+    [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:), obstacles, Rk, Nei_beta_agent);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
     p_nodes_all{iteration} = p_nodes; %SAVE VELOCITY OF ALL NODES
     nodes_old = nodes;
@@ -185,7 +185,7 @@ function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r,
 %         Controls the positions of the nodes in the MSN as time progresses
 
     % Set constants
-    c1_alpha = 30;  %ORIGINALLY 30
+    c1_alpha = 35;  %ORIGINALLY 30
     c2_alpha = 2*sqrt(c1_alpha);
     c1_mt = 1.1;    % ORIGINALLY 1.1
     c2_mt = 2*sqrt(c1_mt);
@@ -210,8 +210,6 @@ function [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r,
         
         for k = 1:length(Nei_beta_agent{i})
             % k refers to the kth beta agent of node i
-            whu = Rk(Nei_beta_agent{i}(k))
-            phsdf = Rk(Nei_beta_agent{i}(k),:)
             phi_beta_in = sigmaNorm(qik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), Rk(Nei_beta_agent{i}(k)))-nodes(i,:), epsilon);
             beta_term1 = beta_term1 + phi_beta(phi_beta_in, d, epsilon) * nik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), epsilon, Rk(Nei_beta_agent{i}(k)));
             beta_term2 = beta_term2 + bik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), d, Rk(Nei_beta_agent{i}(k)), epsilon) * (pik(nodes(i,:), obstacles(Nei_beta_agent{i}(k),:), Rk(Nei_beta_agent{i}(k)), p_nodes(i,:)) - p_nodes(i,:));
