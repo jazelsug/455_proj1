@@ -1,6 +1,6 @@
 % Name: proj1_case1.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 6, 2021
+% Last Modified: Oct. 8, 2021
 
 clc,clear
 close all
@@ -33,18 +33,6 @@ p_nodes_all = cell(size(t,2),num_nodes);
 nFrames = 20; %set number of frames for the movie
 mov(1:nFrames) = struct('cdata', [],'colormap', []); % Preallocate movie structure.
 
-% %TEST - DELETE LATER
-% [Nei_agent, A] = findNeighbors(nodes, r);
-% celldisp(Nei_agent)
-% A(1:10)
-% nodes(1,:), nodes(2,:)
-% aij_test = aij(nodes(1,:), nodes(2,:), epsilon, r)
-% nij_test = nij(nodes(1,:), nodes(2,:), epsilon)
-% [Ui] = inputcontrol_Algorithm1(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n); % CHECK
-
-
-%[Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findNeighbors(nodes_old,nodes,r, r_prime,obstacles, Rk, n, p_nodes,delta_t_update)
-% r_prime, obstacles, Rk doesn't matter for case 1
 
 %================= START ITERATION ===============
 
@@ -258,10 +246,7 @@ function result = nij(i, j, epsilon)
 %     -----------
 %     result : double array (1x2)
 %           The vector along the line connecting node i and node j
-    
-%     numerator = j - i;
-%     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
-%     result = numerator/denominator;
+
     result = sigmaE(j-i, epsilon);
 end
 
@@ -314,7 +299,7 @@ function result = phi_alpha(z, r, d, epsilon)
 %           Value to be used in Ui gradient-based term
 
     r_alpha = sigmaNorm(r, epsilon);
-    d_alpha = sigmaNorm(d, epsilon);    %CHECK - is this what d alpha is?
+    d_alpha = sigmaNorm(d, epsilon);
     result = bump(z/r_alpha) * phi(z-d_alpha);
 end
 
@@ -371,7 +356,7 @@ function result = aij(i, j, epsilon, r)
 %     result : double array (1x2)
 %           The spatial adjacency matrix
     
-    result = zeros(size(i));    % result is a 1x2 matrix - CHECK
+    result = zeros(size(i));
     
     if ~isequal(i,j)
         r_alpha = sigmaNorm(r, epsilon);
@@ -379,32 +364,3 @@ function result = aij(i, j, epsilon, r)
         result = bump(input_to_bump);
     end
 end
-
-% function result = aij(nodes, epsilon, r, dimensions)
-% %     Returns the spatial adjacency matrix given the positions of two nodes, i and j.
-% %     
-% %     Inputs:
-% %     i : 1x2 double, position of node i
-% %     j : 1x2 double, position of node j
-% %     epsilon : constant for sigma norm
-% %     r : double, interaction range for nodes in MSN
-% %     
-% %     Output:
-% %     result : 1x2 double
-%     
-%     r_alpha = sigmaNorm(r, epsilon);
-%     num_nodes = size(nodes, 1);
-%     
-%     result = zeros(num_nodes, num_nodes, dimensions);    % result is a 1x2 matrix
-%     
-%     for i = 1:num_nodes
-%        for j = 1:num_nodes
-%            input_to_bump = sigmaNorm(nodes(j,:)-nodes(i,:), epsilon) / r_alpha;
-%            bump_val = bump(input_to_bump);
-%            
-%            if i ~= j
-%                result(i,j,:) = bump_val;
-%            end
-%        end
-%     end
-% end

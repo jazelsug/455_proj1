@@ -69,10 +69,7 @@ for iteration =1:length(t)
     end  
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
-    
-%     [Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findneighbors(nodes_old,nodes,r, r_prime,obstacles, Rk,n, p_nodes,delta_t_update);
-%     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
-    
+ 
     [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, r, obstacles);
     [Ui] = inputcontrol_Algorithm3(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:), obstacles, Rk, Nei_beta_agent);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
@@ -263,7 +260,7 @@ function [Nei_agent, Nei_beta_agent, A] = findNeighbors(nodes, range, obstacles)
         end
     end
     
-    % Iterate through each node i for Nei_beta_agent - CHECK
+    % Iterate through each node i for Nei_beta_agent
     for i = 1:num_nodes
         for j = 1:num_obstacles
            % Check if obstacle j is in the interaction range of node i
@@ -342,13 +339,24 @@ function result = nij(i, j, epsilon)
 %     result : double array (1x2)
 %           The vector along the line connecting node i and node j
     
-%     numerator = j - i;
-%     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
-%     result = numerator/denominator;
     result = sigmaE(j-i, epsilon);
 end
 
 function result = sigmaE(z, epsilon)
+%     Function to be used in nij function.
+%     
+%     Parameters
+%     -------------
+%     z : double (1x2)
+%           A vector
+%     epsilon : double
+%           A constant
+%     
+%     Returns
+%     -----------
+%     result : double (1x2)
+%           The resulting vector
+
     result = z / (1 + epsilon * sigmaNorm(z, epsilon));
 end
 
@@ -397,7 +405,7 @@ function result = phi_alpha(z, r, d, epsilon)
 %           Value to be used in Ui gradient-based term
 
     r_alpha = sigmaNorm(r, epsilon);
-    d_alpha = sigmaNorm(d, epsilon);    %CHECK - is this what d alpha is?
+    d_alpha = sigmaNorm(d, epsilon);
     result = bump(z/r_alpha) * phi(z-d_alpha);
 end
 
@@ -623,6 +631,23 @@ function result = ak(i, k)
 end
 
 function result = phi_beta(z, d, epsilon)
+%     The action function used to construct a smooth pairwise potential
+%     with finite cut-off in the beta term of the Alg.3 Ui.
+%     
+%     Parameters
+%     -------------
+%     z : double
+%           Sigma norm value of two nodes
+%     d : double
+%           Desired distance of nodes in MSN
+%     espilon : double
+%           A constant for the sigma norm
+%     
+%     Returns
+%     -----------
+%     result : double
+%           Value to be used in Ui beta term
+
     d_beta = sigmaNorm(d, epsilon);
     
     result = bump(z/d_beta) * (sigma1(z-d_beta) - 1);

@@ -63,9 +63,6 @@ for iteration =1:length(t)
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
     
-%     [Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findneighbors(nodes_old,nodes,r, r_prime,obstacles, Rk,n, p_nodes,delta_t_update);
-%     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
-    
     [Nei_agent, A] = findNeighbors(nodes, r);
     [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1(iteration,:), pt1(iteration,:));
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
@@ -293,13 +290,24 @@ function result = nij(i, j, epsilon)
 %     result : double array (1x2)
 %           The vector along the line connecting node i and node j
     
-%     numerator = j - i;
-%     denominator = sqrt(1 + epsilon * (norm(j-i))^2);
-%     result = numerator/denominator;
     result = sigmaE(j-i, epsilon);
 end
 
 function result = sigmaE(z, epsilon)
+%     Function to be used in nij function.
+%     
+%     Parameters
+%     -------------
+%     z : double (1x2)
+%           A vector
+%     epsilon : double
+%           A constant
+%     
+%     Returns
+%     -----------
+%     result : double (1x2)
+%           The resulting vector
+
     result = z / (1 + epsilon * sigmaNorm(z, epsilon));
 end
 

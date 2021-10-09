@@ -1,6 +1,6 @@
 % Name: proj1_case2.m
 % Author: Jazel A. Suguitan
-% Last Modified: Oct. 7, 2021
+% Last Modified: Oct. 8, 2021
 
 clc,clear
 close all
@@ -52,10 +52,7 @@ for iteration =1:length(t)
 %     end  
     plot(qt1(:,1),qt1(:,2),'ro','LineWidth',2,'MarkerEdgeColor','r','MarkerFaceColor','r', 'MarkerSize',4.2)
     hold on
-    
-%     [Nei_agent, Nei_beta_agent, p_ik, q_ik, A] = findneighbors(nodes_old,nodes,r, r_prime,obstacles, Rk,n, p_nodes,delta_t_update);
-%     [Ui] = inputcontrol_Algorithm2(nodes_old,nodes,Nei_agent,n,epsilon,r,r_prime,d,k_scale,Nei_beta_agent,p_ik,q_ik,obstacles,qt1(iteration,:),pt1(iteration,:), p_nodes);
-    
+     
     [Nei_agent, A] = findNeighbors(nodes, r);
     [Ui] = inputcontrol_Algorithm2(nodes, Nei_agent, num_nodes, epsilon, r, d, p_nodes, n, qt1);
     p_nodes = (nodes - nodes_old)/delta_t_update; %COMPUTE velocities of sensor nodes
